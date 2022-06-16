@@ -12,7 +12,7 @@
 
 /*------------------------------ Constantes ---------------------------------*/
 
-#define BAUD            115200      // Frequence de transmission serielle
+#define BAUD            9600      // Frequence de transmission serielle
 #define UPDATE_PERIODE  100         // Periode (ms) d'envoie d'etat general
 
 #define MAGPIN          32          // Port numerique pour electroaimant
@@ -41,7 +41,7 @@ SoftTimer timerSendMsg_;            // chronometre d'envoie de messages
 SoftTimer timerPulse_;              // chronometre pour la duree d'un pulse
 
 uint16_t pulseTime_ = 0;            // temps dun pulse en ms
-float PWM_des_ = 0;                 // PWM desire pour les moteurs
+float PWM_des_ = 0.2;                 // PWM desire pour les moteurs
 
 
 float Axyz[3];                      // tableau pour accelerometre
@@ -84,6 +84,8 @@ void setup() {
 /* Boucle principale (infinie)*/
 void loop() {
 
+//forward();
+/*
   if(shouldRead_){
     readMsg();
   }
@@ -98,6 +100,7 @@ void loop() {
   
   // mise à jour du PID
   pid_.run();
+  */
 }
 
 /*---------------------------Definition de fonctions ------------------------*/
