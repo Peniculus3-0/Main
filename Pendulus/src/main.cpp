@@ -45,7 +45,9 @@ SoftTimer timerSendMsg_;            // chronometre d'envoie de messages
 SoftTimer timerPulse_;              // chronometre pour la duree d'un pulse
 
 uint16_t pulseTime_ = 0;            // temps dun pulse en ms
-float PWM_des_ = 1.0;                 // PWM desire pour les moteurs
+float PWM_des_F = 0.8;                 // PWM desire pour les moteurs foward
+float PWM_des_B = 0.6;                 // PWM desire pour les moteurs reverse
+
 
 
 float Axyz[3];                      // tableau pour accelerometre
@@ -84,22 +86,26 @@ void setup() {
   pid_.setEpsilon(0.001);
   pid_.setPeriod(200);
 
-  pinMode(PinElectro,OUTPUT)
+  pinMode(PinElectro,OUTPUT);
 }
   
 /* Boucle principale (infinie)*/
 void loop() {
 
 digitalWrite(PinElectro,HIGH);
-/*
-forward();
-delay(1000);
+delay(3000);
+reverse();
+delay(200);
 stop();
-delay(4000);
+delay(200);
+forward();
+delay(800);
+stop();
+delay(2000);
 reverse();
 delay(1000);
 stop();
-delay(4000);
+delay(3000);
 
 
 /*
@@ -128,8 +134,8 @@ void timerCallback(){shouldSend_ = true;}
 
 void forward(){
   /* Faire rouler le robot vers l'avant à une vitesse désirée */
-  AX_.setMotorPWM(0, PWM_des_);
-  AX_.setMotorPWM(1, PWM_des_);
+  AX_.setMotorPWM(0, -PWM_des_F);
+  AX_.setMotorPWM(1, -PWM_des_F);
   Direction_ = 1;
 }
 
@@ -142,8 +148,8 @@ void stop(){
 
 void reverse(){
   /* Faire rouler le robot vers l'arrière à une vitesse désirée */
-  AX_.setMotorPWM(0, -PWM_des_);
-  AX_.setMotorPWM(1, -PWM_des_);
+  AX_.setMotorPWM(0, PWM_des_B);
+  AX_.setMotorPWM(1, PWM_des_B);
   Direction_ = -1;
 }
 void sendMsg(){
@@ -157,7 +163,7 @@ void sendMsg(){
   doc["goal"] = pid_.getGoal();
   doc["voltage"] = AX_.getVoltage();
   doc["current"] = AX_.getCurrent(); 
-  doc["PWM_des"] = PWM_des_;
+  //doc["PWM_des"] = PWM_des_;
   doc["Etat_robot"] = Direction_;
   doc["accelX"] = imu_.getAccelX();
   doc["accelY"] = imu_.getAccelY();
@@ -194,7 +200,7 @@ void readMsg(){
   // Analyse des éléments du message message
   parse_msg = doc["PWM_des"];
   if(!parse_msg.isNull()){
-     PWM_des_ = doc["pulsePWM"].as<float>();
+     //PWM_des_ = doc["pulsePWM"].as<float>();
   }
 
    parse_msg = doc["RunForward"];
