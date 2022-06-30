@@ -84,7 +84,7 @@ void setup() {
 /* Boucle principale (infinie)*/
 void loop() {
 
-//forward();
+forward();
 /*
   if(shouldRead_){
     readMsg();
