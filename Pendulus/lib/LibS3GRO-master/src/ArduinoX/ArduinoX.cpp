@@ -11,7 +11,7 @@ void ArduinoX::init(){
   pinMode(BUZZER_PIN, OUTPUT);
   digitalWrite(BUZZER_PIN, LOW);
   pinMode(LOWBAT_PIN, INPUT);
-  //ina219.begin();
+  ina219.begin();
   for(uint8_t id = 0; id < 2; id++){
     motor_[id].init(MOTOR_PWM_PIN[id], MOTOR_DIR_PIN[id]);
     encoder_[id].init(COUNTER_SLAVE_PIN[id], COUNTER_FLAG_PIN[id]);
