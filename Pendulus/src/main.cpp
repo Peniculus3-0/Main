@@ -20,6 +20,10 @@
 
 #define PASPARTOUR      64          // Nombre de pas par tour du moteur
 #define RAPPORTVITESSE  50          // Rapport de vitesse du moteur
+#define PinElectro      2           // Pin pour Electroaimant
+#define PinPotentio     7           // Pin pour Potentiomètre
+
+
 
 /*---------------------------- variables globales ---------------------------*/
 
@@ -41,7 +45,7 @@ SoftTimer timerSendMsg_;            // chronometre d'envoie de messages
 SoftTimer timerPulse_;              // chronometre pour la duree d'un pulse
 
 uint16_t pulseTime_ = 0;            // temps dun pulse en ms
-float PWM_des_ = 0.2;                 // PWM desire pour les moteurs
+float PWM_des_ = 1.0;                 // PWM desire pour les moteurs
 
 
 float Axyz[3];                      // tableau pour accelerometre
@@ -79,12 +83,25 @@ void setup() {
   // Attache des fonctions de retour
   pid_.setEpsilon(0.001);
   pid_.setPeriod(200);
+
+  pinMode(PinElectro,OUTPUT)
 }
   
 /* Boucle principale (infinie)*/
 void loop() {
 
-//forward();
+digitalWrite(PinElectro,HIGH);
+/*
+forward();
+delay(1000);
+stop();
+delay(4000);
+reverse();
+delay(1000);
+stop();
+delay(4000);
+
+
 /*
   if(shouldRead_){
     readMsg();

@@ -7,7 +7,7 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 
 # This program built for i386-apple-darwin11.3.0
 
-# Make data base, printed on Thu Jun 16 10:51:39 2022
+# Make data base, printed on Thu Jun 30 13:59:35 2022
 
 # Variables
 
@@ -19,6 +19,8 @@ make all --print-data-base --no-builtin-variables --no-builtin-rules --question
 VSCODE_LOG_NATIVE = false
 # automatic
 ?D = $(patsubst %/,%,$(dir $?))
+# environment
+PLATFORMIO_IDE = 2.5.0
 # automatic
 @D = $(patsubst %/,%,$(dir $@))
 # automatic
@@ -38,11 +40,11 @@ VSCODE_VERBOSE_LOGGING = true
 # environment
 __CFBundleIdentifier = com.microsoft.VSCode
 # environment
-VSCODE_IPC_HOOK_EXTHOST = /var/folders/07/f_0zqv7n4dscyhzrbmkf4lzh0000gn/T/vscode-ipc-2c9cafa9-72c6-49e6-9842-78a363ec308a.sock
+VSCODE_IPC_HOOK_EXTHOST = /var/folders/07/f_0zqv7n4dscyhzrbmkf4lzh0000gn/T/vscode-ipc-862bea90-2da6-422c-b9c7-01e3d5f31b03.sock
 # environment
 VSCODE_CWD = /
 # environment
-PATH = /usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+NO_PROXY = 127.0.0.1
 # environment
 VSCODE_LOG_STACK = false
 # environment
@@ -50,7 +52,7 @@ ELECTRON_RUN_AS_NODE = 1
 # default
 .FEATURES := target-specific order-only second-expansion else-if archives jobserver check-symlink
 # environment
-SSH_AUTH_SOCK = /private/tmp/com.apple.launchd.sbHk2rBt96/Listeners
+SSH_AUTH_SOCK = /private/tmp/com.apple.launchd.FZGuyqhG7q/Listeners
 # automatic
 %F = $(notdir $%)
 # environment
@@ -66,7 +68,7 @@ HOME = /Users/etiennechoquette
 # default
 MAKEFILEPATH = $(shell /usr/bin/xcode-select -print-path 2>/dev/null || echo /Developer)/Makefiles
 # environment
-VSCODE_CODE_CACHE_PATH = /Users/etiennechoquette/Library/Application Support/Code/CachedData/4af164ea3a06f701fe3e89a2bcbb421d2026b68f
+VSCODE_CODE_CACHE_PATH = /Users/etiennechoquette/Library/Application Support/Code/CachedData/30d9c6cd9483b2cc586687151bcbcd635f373630
 # environment
 LOGNAME = etiennechoquette
 # environment
@@ -76,13 +78,17 @@ VSCODE_HANDLES_UNCAUGHT_ERRORS = true
 # automatic
 ^D = $(patsubst %/,%,$(dir $^))
 # environment
-XPC_FLAGS = 0x0
+PLATFORMIO_PATH = /Users/etiennechoquette/.platformio/python3/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
 # default
 MAKE = $(MAKE_COMMAND)
 # default
 MAKECMDGOALS := all
 # environment
+PATH = /usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+# environment
 SHLVL = 2
+# environment
+XPC_FLAGS = 0x0
 # default
 MAKE_VERSION := 3.81
 # environment
@@ -100,7 +106,7 @@ TMPDIR = /var/folders/07/f_0zqv7n4dscyhzrbmkf4lzh0000gn/T/
 # automatic
 *F = $(notdir $*)
 # environment
-VSCODE_IPC_HOOK = /Users/etiennechoquette/Library/Application Support/Code/1.68.0-main.sock
+VSCODE_IPC_HOOK = /Users/etiennechoquette/Library/Application Support/Code/1.68.1-main.sock
 # makefile
 MAKEFLAGS = Rrqp
 # environment
@@ -108,7 +114,7 @@ MFLAGS = -Rrqp
 # automatic
 *D = $(patsubst %/,%,$(dir $*))
 # environment
-XPC_SERVICE_NAME = application.com.microsoft.VSCode.8611662887.8611662893
+XPC_SERVICE_NAME = application.com.microsoft.VSCode.8612449304.8612449310
 # automatic
 +D = $(patsubst %/,%,$(dir $+))
 # automatic
@@ -122,6 +128,8 @@ MAKEFILES :=
 # automatic
 <F = $(notdir $<)
 # environment
+PLATFORMIO_CALLER = vscode
+# environment
 LC_ALL = C
 # automatic
 ^F = $(notdir $^)
@@ -134,9 +142,9 @@ MAKELEVEL := 0
 # environment
 LANG = C
 # environment
-VSCODE_PID = 29414
+VSCODE_PID = 2946
 # variable set hash-table stats:
-# Load=62/1024=6%, Rehash=0, Collisions=1/83=1%
+# Load=66/1024=6%, Rehash=0, Collisions=3/87=3%
 
 # Pattern-specific Variable Values
 
@@ -144,7 +152,7 @@ VSCODE_PID = 29414
 
 # Directories
 
-# . (device 16777222, inode 8612131410): 6 files, no impossibilities.
+# . (device 16777226, inode 8612131410): 6 files, no impossibilities.
 
 # 6 files, no impossibilities in 1 directories.
 
@@ -218,7 +226,7 @@ GNUmakefile:
 # strcache size: total = 0 / max = 0 / min = 4096 / avg = 0
 # strcache free: total = 0 / max = 0 / min = 4096 / avg = 0
 
-# Finished Make data base on Thu Jun 16 10:51:39 2022
+# Finished Make data base on Thu Jun 30 13:59:35 2022
 
  
 make: *** No rule to make target `all'.  Stop.
