@@ -5,6 +5,9 @@
  * date: Juin 2022
 */
 
+
+//Je suis un ninja
+
 /*------------------------------ Librairies ---------------------------------*/
 #include <ArduinoJson.h> // librairie de syntaxe JSON
 #include <SPI.h> // librairie Communication SPI
