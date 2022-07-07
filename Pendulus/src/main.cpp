@@ -68,7 +68,8 @@ void sendMsg();
 void readMsg();
 void serialEvent();
 void runsequence();
-double distanceRelle()
+double distanceRelle();
+void CommandeMoteur();
 
 
 /*---------------------------- fonctions "Main" -----------------------------*/
@@ -92,7 +93,7 @@ void setup() {
   pid_.setEpsilon(0.001);
   pid_.setPeriod(200);
   pid_.setMeasurementFunc(distanceRelle);  // ajouter encoder moteur comme fonction
-  pid_.setCommandFunc()
+  pid_.setCommandFunc(CommandeMoteur);
   pid_.setGoal(1); // 
 
   pinMode(PinElectro,OUTPUT);
@@ -104,11 +105,7 @@ pid_.enable();
 pid_.run();
 
 digitalWrite(PinElectro,HIGH);
-if(pid_.computeCommand > 1)
-{
 
-
-}
 
 /*
   if(shouldRead_){
@@ -130,13 +127,6 @@ if(pid_.computeCommand > 1)
 
 /*---------------------------Definition de fonctions ------------------------*/
 
-double distanceRelle()
-{
-  double distance =2*pi*RayonRoue*AX_.readEncoder()/64;
-  serial.println(distance); 
-  return distance;
-}
-
 void serialEvent(){shouldRead_ = true;}
 
 void timerCallback(){shouldSend_ = true;}
@@ -146,6 +136,23 @@ void forward(){
   AX_.setMotorPWM(0, -PWM_des_F);
   AX_.setMotorPWM(1, -PWM_des_F);
   Direction_ = 1;
+}
+double distanceRelle()
+{
+  double distance =2*pi*RayonRoue*AX_.readEncoder()/64;
+  serial.println(distance); 
+  return distance;
+
+}
+void CommandeMoteur(double x)
+{
+ if(x > 1)
+  x=1 ;
+ if(x < -1 )
+  x=-1;
+AX_.setMotorPWM(0, x);
+AX_.setMotorPWM(1, x);
+
 }
 
 void stop(){
