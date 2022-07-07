@@ -68,11 +68,8 @@ void sendMsg();
 void readMsg();
 void serialEvent();
 void runsequence();
-double distanceRelle()
-{
-  double distance =2*pi*RayonRoue*AX_.readEncoder()/64;
-  return distance;
-}
+double distanceRelle();
+
 
 /*---------------------------- fonctions "Main" -----------------------------*/
 
@@ -140,6 +137,12 @@ delay(3000);
 }
 
 /*---------------------------Definition de fonctions ------------------------*/
+
+double distanceRelle()
+{
+  double distance =2*pi*RayonRoue*AX_.readEncoder()/64;
+  return distance;
+}
 
 void serialEvent(){shouldRead_ = true;}
 
