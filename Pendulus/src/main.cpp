@@ -68,8 +68,13 @@ void sendMsg();
 void readMsg();
 void serialEvent();
 void runsequence();
-double distanceRelle();
+double distanceRelle()
+{
+  double distance =2*pi*RayonRoue*AX_.readEncoder()/64;
+  serial.println(distance); 
+  return distance;
 
+}
 
 /*---------------------------- fonctions "Main" -----------------------------*/
 
@@ -92,7 +97,8 @@ void setup() {
   pid_.setEpsilon(0.001);
   pid_.setPeriod(200);
   pid_.setMeasurementFunc(distanceRelle);  // ajouter encoder moteur comme fonction
-  pid_.setGoal(); // 
+  pid_.setCommandFunc()
+  pid_.setGoal(1); // 
 
   pinMode(PinElectro,OUTPUT);
 }
@@ -103,20 +109,11 @@ pid_.enable();
 pid_.run();
 
 digitalWrite(PinElectro,HIGH);
-delay(3000);
-reverse();
-delay(200);
-stop();
-delay(200);
-forward();
-delay(800);
-stop();
-delay(2000);
-reverse();
-delay(1000);
-stop();
-delay(3000);
+if(pid_.computeCommand > 1)
+{
 
+
+}
 
 /*
   if(shouldRead_){
@@ -137,12 +134,6 @@ delay(3000);
 }
 
 /*---------------------------Definition de fonctions ------------------------*/
-
-double distanceRelle()
-{
-  double distance =2*pi*RayonRoue*AX_.readEncoder()/64;
-  return distance;
-}
 
 void serialEvent(){shouldRead_ = true;}
 
