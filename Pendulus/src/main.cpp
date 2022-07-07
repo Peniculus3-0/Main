@@ -32,6 +32,9 @@ MegaServo servo_;                   // objet servomoteur
 VexQuadEncoder vexEncoder_;         // objet encodeur vex
 IMU9DOF imu_;                       // objet imu
 PID pid_;                           // objet PID
+PID pid2;                           // objet PID
+LS7366Counter Encoder1;             // objet Encoder
+
 
 volatile bool shouldSend_ = false;  // drapeau prêt à envoyer un message
 volatile bool shouldRead_ = false;  // drapeau prêt à lire un message
@@ -85,12 +88,16 @@ void setup() {
   // Attache des fonctions de retour
   pid_.setEpsilon(0.001);
   pid_.setPeriod(200);
+  pid_.setMeasurementFunc(Encoder1.read());  // ajouter encoder moteur comme fonction
+  pid_.setGoal(); // 
 
   pinMode(PinElectro,OUTPUT);
 }
   
 /* Boucle principale (infinie)*/
 void loop() {
+pid_.enable();
+pid_.run();
 
 digitalWrite(PinElectro,HIGH);
 delay(3000);
