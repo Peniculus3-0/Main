@@ -22,7 +22,9 @@
 #define RAPPORTVITESSE  50          // Rapport de vitesse du moteur
 #define PinElectro      2           // Pin pour Electroaimant
 #define PinPotentio     7           // Pin pour Potentiomètre
-#define RayonRoue       0.0254          // rayon des roues
+#define RayonRoue       0.0254      // rayon des roues
+#define positionCible   1.5         // position d'arrêt
+#define angleCible      0         // position d'arrêt
 
 
 
@@ -32,8 +34,8 @@ ArduinoX AX_;                       // objet arduinoX
 MegaServo servo_;                   // objet servomoteur
 VexQuadEncoder vexEncoder_;         // objet encodeur vex
 IMU9DOF imu_;                       // objet imu
-PID pid_;                           // objet PID
-PID pid2;                           // objet PID
+PID pid_pos;                           // objet PID
+PID pid_angle;                           // objet PID
 
 
 
@@ -88,21 +90,37 @@ void setup() {
   timerSendMsg_.enable();
   
   // Initialisation du PID
-  pid_.setGains(0.25,0.1 ,0);
+  pid_pos.setGains(0.25,0.1 ,0);
   // Attache des fonctions de retour
-  pid_.setEpsilon(0.001);
-  pid_.setPeriod(200);
-  pid_.setMeasurementFunc(distanceRelle);  // ajouter encoder moteur comme fonction
-  pid_.setCommandFunc(CommandeMoteur);
-  pid_.setGoal(1); // 
+  pid_pos.setEpsilon(0.01);
+  pid_pos.setPeriod(200);
+  pid_pos.setMeasurementFunc(distanceRelle);  // ajouter encoder moteur comme fonction
+  pid_pos.setCommandFunc(CommandeMoteur);
+  pid_pos.setGoal(positionCible); // 
+
+  pid_angle.setGains(0.25,0.1 ,0);
+  // Attache des fonctions de retour
+  pid_angle.setEpsilon(0.01);
+  pid_angle.setPeriod(200);
+  pid_angle.setMeasurementFunc();  // ajouter encoder moteur comme fonction
+  pid_angle.setCommandFunc(CommandeMoteur);
+  pid_angle.setGoal(1.5); // 
 
   pinMode(PinElectro,OUTPUT);
 }
   
 /* Boucle principale (infinie)*/
 void loop() {
-pid_.enable();
-pid_.run();
+
+while (distance != positionCible - 0.5)
+{
+  AX_.setMotorPWM(0, 1);
+}
+
+pid_pos.enable();
+pid_pos.run();
+
+
 
 digitalWrite(PinElectro,HIGH);
 
@@ -137,6 +155,8 @@ void forward(){
   AX_.setMotorPWM(1, -PWM_des_F);
   Direction_ = 1;
 }
+
+// Fonctions pour pid de position -----------------------------------------------
 double distanceRelle()
 {
   double distance =2*pi*RayonRoue*AX_.readEncoder()/64;
@@ -152,7 +172,6 @@ void CommandeMoteur(double x)
   x=-1;
 AX_.setMotorPWM(0, x);
 AX_.setMotorPWM(1, x);
-
 }
 
 void stop(){
