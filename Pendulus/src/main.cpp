@@ -163,7 +163,7 @@ void sendMsg(){
   doc["goal"] = pid_.getGoal();
   doc["voltage"] = AX_.getVoltage();
   doc["current"] = AX_.getCurrent(); 
-  //doc["PWM_des"] = PWM_des_;
+  //doc["PWM_des"] = PWM_des_;  ********************************************************************
   doc["Etat_robot"] = Direction_;
   doc["accelX"] = imu_.getAccelX();
   doc["accelY"] = imu_.getAccelY();
@@ -200,7 +200,7 @@ void readMsg(){
   // Analyse des éléments du message message
   parse_msg = doc["PWM_des"];
   if(!parse_msg.isNull()){
-     //PWM_des_ = doc["pulsePWM"].as<float>();
+     //PWM_des_ = doc["pulsePWM"].as<float>();*********************************************************
   }
 
    parse_msg = doc["RunForward"];
