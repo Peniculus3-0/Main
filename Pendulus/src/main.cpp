@@ -69,12 +69,7 @@ void readMsg();
 void serialEvent();
 void runsequence();
 double distanceRelle()
-{
-  double distance =2*pi*RayonRoue*AX_.readEncoder()/64;
-  serial.println(distance); 
-  return distance;
 
-}
 
 /*---------------------------- fonctions "Main" -----------------------------*/
 
@@ -134,6 +129,13 @@ if(pid_.computeCommand > 1)
 }
 
 /*---------------------------Definition de fonctions ------------------------*/
+
+double distanceRelle()
+{
+  double distance =2*pi*RayonRoue*AX_.readEncoder()/64;
+  serial.println(distance); 
+  return distance;
+}
 
 void serialEvent(){shouldRead_ = true;}
 
