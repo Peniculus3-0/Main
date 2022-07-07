@@ -84,8 +84,6 @@ void setup() {
 /* Boucle principale (infinie)*/
 void loop() {
 
-forward();
-/*
   if(shouldRead_){
     readMsg();
   }
@@ -100,7 +98,7 @@ forward();
   
   // mise à jour du PID
   pid_.run();
-  */
+  
 }
 
 /*---------------------------Definition de fonctions ------------------------*/
@@ -203,7 +201,7 @@ void runSequence(){
   }
 
   if(stop_){
-    forward();
+    stop();
   }
   if(RunReverse_){
     reverse();
