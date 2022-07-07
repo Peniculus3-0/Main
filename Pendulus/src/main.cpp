@@ -24,7 +24,8 @@
 #define PinPotentio     7           // Pin pour Potentiomètre
 #define RayonRoue       0.0254      // rayon des roues
 #define positionCible   1.5         // position d'arrêt
-#define angleCible      0         // position d'arrêt
+#define angleCible      0          // position d'arrêt
+#define valeurPot                 // valeur du potentiometre
 
 
 
@@ -88,6 +89,8 @@ void setup() {
   timerSendMsg_.setDelay(UPDATE_PERIODE);
   timerSendMsg_.setCallback(timerCallback);
   timerSendMsg_.enable();
+
+  int valeurPot = analogread(POTPIN)
   
   // Initialisation du PID
   pid_pos.setGains(0.25,0.1 ,0);
@@ -102,9 +105,11 @@ void setup() {
   // Attache des fonctions de retour
   pid_angle.setEpsilon(0.01);
   pid_angle.setPeriod(200);
-  pid_angle.setMeasurementFunc();  // ajouter encoder moteur comme fonction
+  pid_angle.setMeasurementFunc(anglePendule);  // ajouter encoder moteur comme fonction
   pid_angle.setCommandFunc(CommandeMoteur);
-  pid_angle.setGoal(1.5); // 
+  pid_angle.setGoal(); // 
+
+
 
   pinMode(PinElectro,OUTPUT);
 }
@@ -112,13 +117,17 @@ void setup() {
 /* Boucle principale (infinie)*/
 void loop() {
 
+pid_pos.enable();
+pid_angle.enable();
+
 while (distance != positionCible - 0.5)
 {
-  AX_.setMotorPWM(0, 1);
+  pid_pos.run();
 }
 
-pid_pos.enable();
+pid_angle.run();
 pid_pos.run();
+
 
 
 
@@ -172,6 +181,11 @@ void CommandeMoteur(double x)
   x=-1;
 AX_.setMotorPWM(0, x);
 AX_.setMotorPWM(1, x);
+}
+
+double anglePendule()
+{
+  return analogread(POTPIN);
 }
 
 void stop(){
