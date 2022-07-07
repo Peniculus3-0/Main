@@ -118,6 +118,9 @@ void setup() {
 void loop() {
 
 pid_pos.enable();
+pid_pos.run();
+
+/*pid_pos.enable();
 pid_angle.enable();
 
 while (distance != positionCible - 0.5)
@@ -127,7 +130,7 @@ while (distance != positionCible - 0.5)
 
 pid_angle.run();
 pid_pos.run();
-
+*/
 
 
 
