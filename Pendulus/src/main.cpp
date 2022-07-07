@@ -22,6 +22,7 @@
 #define RAPPORTVITESSE  50          // Rapport de vitesse du moteur
 #define PinElectro      2           // Pin pour Electroaimant
 #define PinPotentio     7           // Pin pour Potentiomètre
+#define RayonRoue       0.0254          // rayon des roues
 
 
 
@@ -33,7 +34,7 @@ VexQuadEncoder vexEncoder_;         // objet encodeur vex
 IMU9DOF imu_;                       // objet imu
 PID pid_;                           // objet PID
 PID pid2;                           // objet PID
-LS7366Counter Encoder1;             // objet Encoder
+
 
 
 volatile bool shouldSend_ = false;  // drapeau prêt à envoyer un message
@@ -67,6 +68,11 @@ void sendMsg();
 void readMsg();
 void serialEvent();
 void runsequence();
+double distanceRelle()
+{
+  double distance =2*pi*RayonRoue*AX_.readEncoder()/64;
+  return distance;
+}
 
 /*---------------------------- fonctions "Main" -----------------------------*/
 
@@ -88,7 +94,7 @@ void setup() {
   // Attache des fonctions de retour
   pid_.setEpsilon(0.001);
   pid_.setPeriod(200);
-  pid_.setMeasurementFunc(Encoder1.read());  // ajouter encoder moteur comme fonction
+  pid_.setMeasurementFunc(distanceRelle);  // ajouter encoder moteur comme fonction
   pid_.setGoal(); // 
 
   pinMode(PinElectro,OUTPUT);
