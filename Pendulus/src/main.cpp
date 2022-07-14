@@ -40,6 +40,10 @@ SoftTimer timerPulse_;              // chronometre pour la duree d'un pulse
 uint16_t pulseTime_ = 0;            // temps dun pulse en ms
 float pulsePWM_ = 0;                // Amplitude de la tension au moteur [-1,1]
 
+int Direction_ = 1;                 // drapeau pour indiquer la direction du robot
+volatile bool RunForward_ = false;  // drapeau pret à rouler en avant
+volatile bool stop_ = false;        // drapeau pour arrêt du robot
+volatile bool RunReverse_ = false;  // drapeau pret à rouler en arrière
 
 float Axyz[3];                      // tableau pour accelerometre
 float Gxyz[3];                      // tableau pour giroscope
@@ -63,11 +67,14 @@ void PIDgoalReached();
 
 void setup() {
   Serial.begin(BAUD);               // initialisation de la communication serielle
+  Serial.println("1---------------");
   AX_.init();                       // initialisation de la carte ArduinoX 
-  imu_.init();                      // initialisation de la centrale inertielle
+  //imu_.init();                      // initialisation de la centrale inertielle
   vexEncoder_.init(2,3);            // initialisation de l'encodeur VEX
   // attache de l'interruption pour encodeur vex
   attachInterrupt(vexEncoder_.getPinInt(), []{vexEncoder_.isr();}, FALLING);
+    Serial.println("2---------------");
+
   
   // Chronometre envoie message
   timerSendMsg_.setDelay(UPDATE_PERIODE);
@@ -111,9 +118,7 @@ void loop() {
 
 /*---------------------------Definition de fonctions ------------------------*/
 
-void serialEvent(){shouldRead_ = true;}
-
-void timerCallback(){shouldSend_ = true;}
+// Fonctions pour le PID------------------------------------------------------------------------
 
 void startPulse(){
   /* Demarrage d'un pulse */
@@ -155,8 +160,8 @@ void sendMsg(){
   doc["gyroX"] = imu_.getGyroX();
   doc["gyroY"] = imu_.getGyroY();
   doc["gyroZ"] = imu_.getGyroZ();
-  doc["isGoal"] = pid_.isAtGoal();
-  doc["actualTime"] = pid_.getActualDt();
+  doc["isGoal"] = pid_pos.isAtGoal();
+  doc["actualTime"] = pid_pos.getActualDt();
 
   // Serialisation
   serializeJson(doc, Serial);
@@ -198,11 +203,11 @@ void readMsg(){
   }
   parse_msg = doc["setGoal"];
   if(!parse_msg.isNull()){
-    pid_.disable();
-    pid_.setGains(doc["setGoal"][0], doc["setGoal"][1], doc["setGoal"][2]);
-    pid_.setEpsilon(doc["setGoal"][3]);
-    pid_.setGoal(doc["setGoal"][4]);
-    pid_.enable();
+    pid_pos.disable();
+    pid_pos.setGains(doc["setGoal"][0], doc["setGoal"][1], doc["setGoal"][2]);
+    pid_pos.setEpsilon(doc["setGoal"][3]);
+    pid_pos.setGoal(doc["setGoal"][4]);
+    pid_pos.enable();
   }
 }
 
