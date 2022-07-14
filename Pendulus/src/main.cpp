@@ -47,7 +47,8 @@ float PWM_des_ = 0.2;                 // PWM desire pour les moteurs
 float Axyz[3];                      // tableau pour accelerometre
 float Gxyz[3];                      // tableau pour giroscope
 float Mxyz[3];                      // tableau pour magnetometre
-
+double energy;                      // Energie
+unsigned long lastT = 0;
 /*------------------------- Prototypes de fonctions -------------------------*/
 
 void timerCallback();
@@ -58,6 +59,8 @@ void sendMsg();
 void readMsg();
 void serialEvent();
 void runsequence();
+double CalculateEnergie();
+
 
 /*---------------------------- fonctions "Main" -----------------------------*/
 
@@ -149,7 +152,8 @@ void sendMsg(){
   doc["isGoal"] = pid_.isAtGoal();
   doc["actualTime"] = pid_.getActualDt();
   doc["power"] = AX_.getVoltage() * AX_.getCurrent();
-  
+  doc["power"] = CalculateEnergie();
+
 
   // Serialisation
   serializeJson(doc, Serial);
@@ -211,7 +215,10 @@ void runSequence(){
 
 }
 
-double getEnergie() {
-  double energie;
-  return energie;
+double CalculateEnergie(){
+  double power = AX_.getVoltage() * AX_.getCurrent();
+  double time = millis() - lastT;
+  energy += power*time;
+  lastT = millis();
+  return energy;
 }
