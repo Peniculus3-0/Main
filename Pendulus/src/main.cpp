@@ -20,7 +20,7 @@
 
 #define PASPARTOUR      64          // Nombre de pas par tour du moteur
 #define RAPPORTVITESSE  50          // Rapport de vitesse du moteur
-#define PI 3.14159
+//#define PI 3.14159
 #define RAYON_ROUE 0.06477          // Rayon en mètres
 #define PULSES_ROT_MOTEUR 64
 #define REDUCTEUR 19
@@ -35,6 +35,9 @@ PID pid_;                           // objet PID
 
 volatile bool shouldSend_ = false;  // drapeau prêt à envoyer un message
 volatile bool shouldRead_ = false;  // drapeau prêt à lire un message
+volatile bool shouldPulse_ = false; // drapeau pour effectuer un pulse
+volatile bool isInPulse_ = false; 
+
 
 int Direction_ = 0;                 // drapeau pour indiquer la direction du robot
 volatile bool RunForward_ = false;  // drapeau pret à rouler en avant
@@ -44,9 +47,9 @@ volatile bool RunReverse_ = false;  // drapeau pret à rouler en arrière
 SoftTimer timerSendMsg_;            // chronometre d'envoie de messages
 SoftTimer timerPulse_;              // chronometre pour la duree d'un pulse
 
-uint16_t pulseTime_ = 0;            // temps dun pulse en ms
-float PWM_des_ = 0.2;                 // PWM desire pour les moteurs
-
+uint16_t pulseTime_;            // temps dun pulse en ms
+float PWM_des_;                 // PWM desire pour les moteurs
+float pulsePWM_ = 0; 
 
 float Axyz[3];                      // tableau pour accelerometre
 float Gxyz[3];                      // tableau pour giroscope
@@ -73,8 +76,8 @@ void readMsg();
 void serialEvent();
 void runSequence();
 void Calculations();
-
-
+void startPulse();
+void endPulse();
 /*---------------------------- fonctions "Main" -----------------------------*/
 
 void setup() {
@@ -84,7 +87,7 @@ void setup() {
   vexEncoder_.init(2,3);            // initialisation de l'encodeur VEX
   // attache de l'interruption pour encodeur vex
   attachInterrupt(vexEncoder_.getPinInt(), []{vexEncoder_.isr();}, FALLING);
-  
+  timerPulse_.setCallback(endPulse);
   // Chronometre envoie message
   timerSendMsg_.setDelay(UPDATE_PERIODE);
   timerSendMsg_.setCallback(timerCallback);
@@ -106,8 +109,11 @@ void loop() {
   if(shouldSend_){
     sendMsg();
   }
-  if(start && !stop_seq){
-    start = false;
+    if(shouldPulse_){
+    startPulse();
+  }
+  if(start){
+    //start = false;
     runSequence();
   }
 
@@ -124,9 +130,26 @@ void loop() {
 /*---------------------------Definition de fonctions ------------------------*/
 
 void serialEvent(){shouldRead_ = true;}
-runSequence
-void timerCallback(){shouldSend_ = true;}
 
+void timerCallback(){shouldSend_ = true;}
+void startPulse(){
+  /* Demarrage d'un pulse */
+  timerPulse_.setDelay(pulseTime_);
+  timerPulse_.enable();
+  timerPulse_.setRepetition(1);
+  AX_.setMotorPWM(0, pulsePWM_);
+  AX_.setMotorPWM(1, pulsePWM_);
+  shouldPulse_ = false;
+  isInPulse_ = true;
+}
+
+void endPulse(){
+  /* Rappel du chronometre */
+  AX_.setMotorPWM(0,0);
+  AX_.setMotorPWM(1,0);
+  timerPulse_.disable();
+  isInPulse_ = false;
+}
 void forward(){
   /* Faire rouler le robot vers l'avant à une vitesse désirée */
   AX_.setMotorPWM(0, PWM_des_);
@@ -161,13 +184,13 @@ void sendMsg(){
   doc["PWM_des"] = PWM_des_;
   doc["Etat_robot"] = Direction_;
   doc["accelX"] = imu_.getAccelX();
-  //doc["accelY"] = imu_.getAccelY();
-  //doc["accelZ"] = imu_.getAccelZ();
-  //doc["gyroX"] = imu_.getGyroX();
-  // doc["gyroY"] = imu_.getGyroY();
-  // doc["gyroZ"] = imu_.getGyroZ();
+  doc["accelY"] = imu_.getAccelY();
+  doc["accelZ"] = imu_.getAccelZ();
+  doc["gyroX"] = imu_.getGyroX();
+  doc["gyroY"] = imu_.getGyroY();
+  doc["gyroZ"] = imu_.getGyroZ();
   doc["isGoal"] = pid_.isAtGoal();
-  //doc["actualTime"] = pid_.getActualDt();
+  doc["actualTime"] = pid_.getActualDt();
   doc["power"] = AX_.getVoltage() * AX_.getCurrent();
   doc["Energy"] = energy;
 
@@ -196,11 +219,19 @@ void readMsg(){
   }
   
   // Analyse des éléments du message message
-  parse_msg = doc["PWM_des"];
+  parse_msg = doc["pulsePWM"];
   if(!parse_msg.isNull()){
-     PWM_des_ = doc["pulsePWM"].as<float>();
+     pulsePWM_ = doc["pulsePWM"].as<float>();
+  }
+  parse_msg = doc["pulseTime"];
+  if(!parse_msg.isNull()){
+     pulseTime_ = doc["pulseTime"].as<float>();
   }
 
+  parse_msg = doc["pulse"];
+  if(!parse_msg.isNull()){
+     shouldPulse_ = doc["pulse"];
+  }
    parse_msg = doc["RunForward"];
   if(!parse_msg.isNull()){
      RunForward_ = doc["RunForward"];
@@ -231,7 +262,7 @@ void readMsg(){
 
 void runSequence(){
 /*Exemple de fonction pour faire bouger le robot en avant et en arrière.*/
-while(!stop_seq || !done){
+
   /*if(RunForward_){
     forward();
   }
@@ -241,8 +272,8 @@ while(!stop_seq || !done){
   }
   if(RunReverse_){
     reverse();
-  }*/
-
+  }
+*/
 forward();
 delay(1000);
 stop();
@@ -250,12 +281,6 @@ delay(50);
 reverse();
 delay(1000);
 stop();
-
- 
-done = true;
-}
-stop();
-done = false;
 }
 
 void Calculations(){
