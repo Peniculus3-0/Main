@@ -12,7 +12,7 @@
 
 /*------------------------------ Constantes ---------------------------------*/
 
-#define BAUD            9600      // Frequence de transmission serielle
+#define BAUD            115200      // Frequence de transmission serielle
 #define UPDATE_PERIODE  100         // Periode (ms) d'envoie d'etat general
 
 #define MAGPIN          32          // Port numerique pour electroaimant
@@ -144,13 +144,13 @@ void sendMsg(){
   doc["PWM_des"] = PWM_des_;
   doc["Etat_robot"] = Direction_;
   doc["accelX"] = imu_.getAccelX();
-  doc["accelY"] = imu_.getAccelY();
-  doc["accelZ"] = imu_.getAccelZ();
-  doc["gyroX"] = imu_.getGyroX();
-  doc["gyroY"] = imu_.getGyroY();
-  doc["gyroZ"] = imu_.getGyroZ();
+  //doc["accelY"] = imu_.getAccelY();
+  //doc["accelZ"] = imu_.getAccelZ();
+  //doc["gyroX"] = imu_.getGyroX();
+  // doc["gyroY"] = imu_.getGyroY();
+  // doc["gyroZ"] = imu_.getGyroZ();
   doc["isGoal"] = pid_.isAtGoal();
-  doc["actualTime"] = pid_.getActualDt();
+  //doc["actualTime"] = pid_.getActualDt();
   doc["power"] = AX_.getVoltage() * AX_.getCurrent();
   doc["Energy"] = energy;
 
