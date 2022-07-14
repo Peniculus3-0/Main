@@ -59,13 +59,10 @@ double speed;
 double accel;
 
 unsigned long lastT = 0;
-<<<<<<< Updated upstream
 double lastPos = 0;
 double lastSpeed = 0;
 
-=======
 bool stop = false, start = false;
->>>>>>> Stashed changes
 /*------------------------- Prototypes de fonctions -------------------------*/
 
 void timerCallback();
