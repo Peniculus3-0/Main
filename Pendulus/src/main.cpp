@@ -59,9 +59,13 @@ double speed;
 double accel;
 
 unsigned long lastT = 0;
+<<<<<<< Updated upstream
 double lastPos = 0;
 double lastSpeed = 0;
 
+=======
+bool stop = false, start = false;
+>>>>>>> Stashed changes
 /*------------------------- Prototypes de fonctions -------------------------*/
 
 void timerCallback();
@@ -106,7 +110,11 @@ void loop() {
   if(shouldSend_){
     sendMsg();
   }
-  
+  if(start && !stop){
+    start = false;
+    runSequence();
+  }
+
 
   // mise a jour des chronometres
   timerSendMsg_.update();
@@ -210,12 +218,25 @@ void readMsg(){
     pid_.setGoal(doc["setGoal"][4]);
     pid_.enable();
   }
+
+   parse_msg = doc["Start"];
+  if(!parse_msg.isNull()){
+     start = doc["Start"];
+  }
+
+     parse_msg = doc["Stop"];
+  if(!parse_msg.isNull()){
+     stop = doc["Stop"];
+  }
+
 }
+
+
 
 void runSequence(){
 /*Exemple de fonction pour faire bouger le robot en avant et en arrière.*/
-
-  if(RunForward_){
+while(!stop || !done){
+  /*if(RunForward_){
     forward();
   }
 
@@ -224,8 +245,21 @@ void runSequence(){
   }
   if(RunReverse_){
     reverse();
-  }
+  }*/
 
+foward();
+delay(1000);
+stop()
+delay(50);
+reverse();
+delay(1000);
+stop()
+
+ 
+done = true;
+}
+stop();
+done = false;
 }
 
 void Calculations(){
