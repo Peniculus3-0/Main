@@ -20,7 +20,11 @@
 
 #define PASPARTOUR      64          // Nombre de pas par tour du moteur
 #define RAPPORTVITESSE  50          // Rapport de vitesse du moteur
-
+#define PI 3.141592624039582048375209384752098375690283740592873489575980720349502983570928374059870870987093864506987349628764983752693487653984790856987239487659287346985276349876285763
+#define RAYON_ROUE 0.06477          // Rayon en mètres
+#define PULSES_ROT_MOTEUR 64
+#define REDUCTEUR 19
+#define PULSES_PER_ROTATION (PULSES_ROT_MOTEUR*REDUCTEUR)
 /*---------------------------- variables globales ---------------------------*/
 
 ArduinoX AX_;                       // objet arduinoX
@@ -47,8 +51,17 @@ float PWM_des_ = 0.2;                 // PWM desire pour les moteurs
 float Axyz[3];                      // tableau pour accelerometre
 float Gxyz[3];                      // tableau pour giroscope
 float Mxyz[3];                      // tableau pour magnetometre
-double energy;                      // Energie
+
+/*------------------------- Variables globales -------------------------*/
+double energy;
+double position;
+double speed;
+double accel;
+
 unsigned long lastT = 0;
+double lastPos = 0;
+double lastSpeed = 0;
+
 /*------------------------- Prototypes de fonctions -------------------------*/
 
 void timerCallback();
@@ -59,7 +72,7 @@ void sendMsg();
 void readMsg();
 void serialEvent();
 void runsequence();
-void CalculateEnergie();
+void Calculations();
 
 
 /*---------------------------- fonctions "Main" -----------------------------*/
@@ -134,7 +147,7 @@ void sendMsg(){
   /* Envoit du message Json sur le port seriel */
   StaticJsonDocument<500> doc;
   // Elements du message
-  CalculateEnergie();
+  Calculations();
   doc["time"] = millis();
   doc["potVex"] = analogRead(POTPIN);
   doc["encVex"] = vexEncoder_.getCount();
@@ -215,9 +228,15 @@ void runSequence(){
 
 }
 
-void CalculateEnergie(){
-  double power = AX_.getVoltage() * AX_.getCurrent();
+void Calculations(){
   double time = millis() - lastT;
+  double power = AX_.getVoltage() * AX_.getCurrent();
   energy += power*time;
+  position = AX_.readEncoder(1)*2*PI*RAYON_ROUE/PULSES_PER_ROTATION;
+  speed = (position-lastPos)/time;
+  accel = (speed-lastSpeed)/time;
+  
+  lastPos = position; 
+  lastSpeed = speed;
   lastT = millis();
 }
