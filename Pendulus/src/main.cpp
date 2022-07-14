@@ -148,6 +148,8 @@ void sendMsg(){
   doc["gyroZ"] = imu_.getGyroZ();
   doc["isGoal"] = pid_.isAtGoal();
   doc["actualTime"] = pid_.getActualDt();
+  doc["power"] = AX_.getVoltage() * AX_.getCurrent();
+  
 
   // Serialisation
   serializeJson(doc, Serial);
@@ -207,4 +209,9 @@ void runSequence(){
     reverse();
   }
 
+}
+
+double getEnergie() {
+  double energie;
+  return energie;
 }
