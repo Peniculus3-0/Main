@@ -97,14 +97,18 @@ class PID
     Parameterless function that returns a double
     (how to get the measurement)
     */
-    void setMeasurementFunc(double (*f)()){measurementFunc_ = f;};
+    void setMeasurementFunc(double (*f)()){measurementFunc_ = f;
+    Serial.println("mesure");
+    };
 
     /** Method to set measurement function
     @param f
     no retrun function with double parameter (the command)
     (what to do with the new command)
     */
-    void setCommandFunc(void (*f)(double)){commandFunc_ = f;};
+    void setCommandFunc(void (*f)(double)){commandFunc_ = f;
+    Serial.println("setcommand");
+    };
 
      /** Method to set function to run when at goal (optional)
     @param f

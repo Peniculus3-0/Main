@@ -13,6 +13,7 @@ PID::PID(){
 
 PID::PID(double kp, double ki, double kd){
     Kp_ = kp;
+    Serial.println("Kp_");
     Ki_ = ki;
     Kd_ = kd;
 }
@@ -22,6 +23,7 @@ void PID::enable(){
     // if function pointers are initiated
     if(measurementFunc_!=nullptr && commandFunc_!=nullptr){
         enable_ = true;
+        Serial.println("enabled");
         measureTime_ = millis() + dtMs_;
         atGoal_ = false;
         eIntegral_ = 0;
@@ -38,7 +40,10 @@ void PID::disable(){
 
 void PID::run(){
     // if enabled and time to run iteration
+      Serial.println("pidrun");
+
     if(millis() >= measureTime_ && enable_){
+  Serial.println("2");
 
         //actualDt_ = millis() - measureTime_;
         measureTime_ = millis() + dtMs_;

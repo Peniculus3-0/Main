@@ -22,8 +22,8 @@
 #define RAPPORTVITESSE  50          // Rapport de vitesse du moteur
 #define PinElectro      2           // Pin pour Electroaimant
 #define PinPotentio     7           // Pin pour Potentiomètre
-#define RayonRoue       0.0254      // rayon des roues
-#define positionCible   1.5         // position d'arrêt
+#define RayonRoue       0.06477      // rayon des roues
+#define positionCible   1.069         // position d'arrêt
 #define angleCible      0          // position d'arrêt
 #define valeurPot       500          // valeur du potentiometre
 #define pi              3.141592653589798462643383279502
@@ -105,22 +105,24 @@ void setup() {
   timerPulse_.setCallback(endPulse);
 
   // Initialisation du PID de position
-  pid_pos.setGains(0.25,0.1 ,0);
+  pid_pos.setGains(0.1,0,0.1);
   pid_pos.setMeasurementFunc(distance);
   pid_pos.setCommandFunc(PIDcommand);
-  pid_pos.setAtGoalFunc(PIDgoalReached);
-  pid_pos.setEpsilon(0.001);
-  pid_pos.setPeriod(200);
+ // pid_pos.setAtGoalFunc(PIDgoalReached);
+  pid_pos.setEpsilon(0.1);
+  pid_pos.setPeriod(500);
   pid_pos.setGoal(positionCible);
+  pid_pos.enable();
 
   // Initialisation du PID d'angle
-  pid_angle.setGains(0.25,0.1 ,0);
+  pid_angle.setGains(913,2713 ,52);
   pid_angle.setMeasurementFunc(angle);
   pid_angle.setCommandFunc(PIDcommand);
-  pid_angle.setAtGoalFunc(PIDgoalReached);
+  //pid_angle.setAtGoalFunc(PIDgoalReached);
   pid_angle.setEpsilon(0.001);
   pid_angle.setPeriod(200);
   pid_angle.setGoal(valeurPot);
+  pid_pos.enable();
 
 
 }
@@ -160,6 +162,10 @@ digitalWrite(MAGPIN,LOW);
 */
 // Pour tuner le PID de position-------------------------------------------------------------
   pid_pos.run();
+ // PWM_des_ = -0.15;
+  //forward();
+   // Serial.println(2*pi*RayonRoue*AX_.readEncoder(1)/(64*19));
+
 
 }
 
@@ -169,17 +175,28 @@ digitalWrite(MAGPIN,LOW);
 
 double distance()
 {
+  Serial.println("valeur encodeur = ");
+  Serial.println(2*pi*RayonRoue*AX_.readEncoder(1)/(64*19));
   return 2*pi*RayonRoue*AX_.readEncoder(1)/64;
 }
 
 double angle()
 {
+  Serial.println(analogRead(POTPIN));
   return analogRead(POTPIN);
 }
 
 void PIDcommand(double cmd)
 {
+  /*
+  if (cmd > 1)
+    PWM_des_=1;
+  else if (cmd < -1)
+    PWM_des_=-1;
+  else*/
   PWM_des_ = cmd;
+  Serial.println("PWM_des = ");
+  Serial.println(PWM_des_);
   forward();
 }
 
@@ -279,7 +296,7 @@ void readMsg(){
     Serial.println(error.c_str());
     return;
   }
-  
+  /*
   // Analyse des éléments du message message
   parse_msg = doc["pulsePWM"];
   if(!parse_msg.isNull()){
@@ -306,7 +323,7 @@ void readMsg(){
 }
 
 void runSequence(){
-/*Exemple de fonction pour faire bouger le robot en avant et en arrière.*/
+//Exemple de fonction pour faire bouger le robot en avant et en arrière.
 
   if(RunForward_){
     forward();
@@ -318,6 +335,6 @@ void runSequence(){
   if(RunReverse_){
     reverse();
   }
-
+*/
 }
 
