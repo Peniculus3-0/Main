@@ -59,7 +59,7 @@ void sendMsg();
 void readMsg();
 void serialEvent();
 void runsequence();
-double CalculateEnergie();
+void CalculateEnergie();
 
 
 /*---------------------------- fonctions "Main" -----------------------------*/
@@ -134,7 +134,7 @@ void sendMsg(){
   /* Envoit du message Json sur le port seriel */
   StaticJsonDocument<500> doc;
   // Elements du message
-
+  CalculateEnergie();
   doc["time"] = millis();
   doc["potVex"] = analogRead(POTPIN);
   doc["encVex"] = vexEncoder_.getCount();
@@ -152,7 +152,7 @@ void sendMsg(){
   doc["isGoal"] = pid_.isAtGoal();
   doc["actualTime"] = pid_.getActualDt();
   doc["power"] = AX_.getVoltage() * AX_.getCurrent();
-  doc["Energy"] = CalculateEnergie();
+  doc["Energy"] = energy;
 
 
   // Serialisation
@@ -215,10 +215,9 @@ void runSequence(){
 
 }
 
-double CalculateEnergie(){
+void CalculateEnergie(){
   double power = AX_.getVoltage() * AX_.getCurrent();
   double time = millis() - lastT;
   energy += power*time;
   lastT = millis();
-  return energy;
 }
