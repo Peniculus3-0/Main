@@ -1,13 +1,14 @@
 /* 
  * GRO 302 - Conception d'un robot mobile
- * Code de démarrage
- * Auteurs: Jean-Samuel Lauzon     
- * date: 1 mai 2019
+ * Code de démarrage Template
+ * Auteurs: Etienne Gendron     
+ * date: Juin 2022
 */
 
 /*------------------------------ Librairies ---------------------------------*/
+#include <ArduinoJson.h> // librairie de syntaxe JSON
+#include <SPI.h> // librairie Communication SPI
 #include <LibS3GRO.h>
-#include <ArduinoJson.h>
 
 /*------------------------------ Constantes ---------------------------------*/
 
@@ -19,7 +20,16 @@
 
 #define PASPARTOUR      64          // Nombre de pas par tour du moteur
 #define RAPPORTVITESSE  50          // Rapport de vitesse du moteur
-#define RayonRoue       0.0250
+#define PinElectro      2           // Pin pour Electroaimant
+#define PinPotentio     7           // Pin pour Potentiomètre
+#define RayonRoue       0.0254      // rayon des roues
+#define positionCible   1.5         // position d'arrêt
+#define angleCible      0          // position d'arrêt
+#define valeurPot       500          // valeur du potentiometre
+#define pi              3.141592653589798462643383279502
+
+
+/*---------------------------- variables globales ---------------------------*/
 
 /*---------------------------- variables globales ---------------------------*/
 
@@ -27,7 +37,8 @@ ArduinoX AX_;                       // objet arduinoX
 MegaServo servo_;                   // objet servomoteur
 VexQuadEncoder vexEncoder_;         // objet encodeur vex
 IMU9DOF imu_;                       // objet imu
-PID pid_;                           // objet PID
+PID pid_pos;                        // objet PID
+PID pid_angle;                      // objet PID
 
 volatile bool shouldSend_ = false;  // drapeau prêt à envoyer un message
 volatile bool shouldRead_ = false;  // drapeau prêt à lire un message
@@ -39,6 +50,7 @@ SoftTimer timerPulse_;              // chronometre pour la duree d'un pulse
 
 uint16_t pulseTime_ = 0;            // temps dun pulse en ms
 float pulsePWM_ = 0;                // Amplitude de la tension au moteur [-1,1]
+float PWM_des_ = 1;                 // PWM desire pour les moteurs
 
 int Direction_ = 1;                 // drapeau pour indiquer la direction du robot
 volatile bool RunForward_ = false;  // drapeau pret à rouler en avant
@@ -52,30 +64,38 @@ float Mxyz[3];                      // tableau pour magnetometre
 /*------------------------- Prototypes de fonctions -------------------------*/
 
 void timerCallback();
+void forward();
+void stop();
+void timerCallback();
 void startPulse();
 void endPulse();
 void sendMsg(); 
 void readMsg();
 void serialEvent();
-
+void runsequence();
 // Fonctions pour le PID
-double PIDmeasurement();
+double distance();
 void PIDcommand(double cmd);
 void PIDgoalReached();
+double angle();
+
+
 
 /*---------------------------- fonctions "Main" -----------------------------*/
 
 void setup() {
   Serial.begin(BAUD);               // initialisation de la communication serielle
-  Serial.println("1---------------");
   AX_.init();                       // initialisation de la carte ArduinoX 
   //imu_.init();                      // initialisation de la centrale inertielle
   vexEncoder_.init(2,3);            // initialisation de l'encodeur VEX
   // attache de l'interruption pour encodeur vex
   attachInterrupt(vexEncoder_.getPinInt(), []{vexEncoder_.isr();}, FALLING);
-    Serial.println("2---------------");
-
   
+  // pin set
+  pinMode(MAGPIN, OUTPUT);
+  pinMode(POTPIN, INPUT);
+
+
   // Chronometre envoie message
   timerSendMsg_.setDelay(UPDATE_PERIODE);
   timerSendMsg_.setCallback(timerCallback);
@@ -83,21 +103,32 @@ void setup() {
 
   // Chronometre duration pulse
   timerPulse_.setCallback(endPulse);
-  
-  // Initialisation du PID
-  pid_.setGains(0.25,0.1 ,0);
-  // Attache des fonctions de retour
-  pid_.setMeasurementFunc(PIDmeasurement);
-  pid_.setCommandFunc(PIDcommand);
-  pid_.setAtGoalFunc(PIDgoalReached);
-  pid_.setEpsilon(0.001);
-  pid_.setPeriod(200);
-  pid_.setGoal(1);
+
+  // Initialisation du PID de position
+  pid_pos.setGains(0.25,0.1 ,0);
+  pid_pos.setMeasurementFunc(distance);
+  pid_pos.setCommandFunc(PIDcommand);
+  pid_pos.setAtGoalFunc(PIDgoalReached);
+  pid_pos.setEpsilon(0.001);
+  pid_pos.setPeriod(200);
+  pid_pos.setGoal(positionCible);
+
+  // Initialisation du PID d'angle
+  pid_angle.setGains(0.25,0.1 ,0);
+  pid_angle.setMeasurementFunc(angle);
+  pid_angle.setCommandFunc(PIDcommand);
+  pid_angle.setAtGoalFunc(PIDgoalReached);
+  pid_angle.setEpsilon(0.001);
+  pid_angle.setPeriod(200);
+  pid_angle.setGoal(valeurPot);
+
+
 }
+
 
 /* Boucle principale (infinie)*/
 void loop() {
-
+/*
   if(shouldRead_){
     readMsg();
   }
@@ -111,14 +142,77 @@ void loop() {
   // mise a jour des chronometres
   timerSendMsg_.update();
   timerPulse_.update();
-  
-  // mise à jour du PID
-  pid_.run();
+  */
+
+/*if () {
+  digitalWrite(MAGPIN,HIGH);
+}
+
+while (distance() != 0.7*positionCible) {
+  pid_pos.run();
+}
+
+while()
+pid_pos.run();
+pid_angle.run();
+
+digitalWrite(MAGPIN,LOW);
+*/
+// Pour tuner le PID de position-------------------------------------------------------------
+  pid_pos.run();
+
 }
 
 /*---------------------------Definition de fonctions ------------------------*/
 
 // Fonctions pour le PID------------------------------------------------------------------------
+
+double distance()
+{
+  return 2*pi*RayonRoue*AX_.readEncoder(1)/64;
+}
+
+double angle()
+{
+  return analogRead(POTPIN);
+}
+
+void PIDcommand(double cmd)
+{
+  PWM_des_ = cmd;
+  forward();
+}
+
+void PIDgoalReached()
+{
+  // To do
+}
+// ---------------------------------------------------------------------------------------------
+
+void serialEvent(){shouldRead_ = true;}
+
+void timerCallback(){shouldSend_ = true;}
+
+void forward(){
+  /* Faire rouler le robot vers l'avant à une vitesse désirée */
+  AX_.setMotorPWM(0, PWM_des_);
+  AX_.setMotorPWM(1, PWM_des_);
+  Direction_ = 1;
+}
+
+void stop(){
+  /* Stopper le robot */
+  AX_.setMotorPWM(0,0);
+  AX_.setMotorPWM(1,0);
+  Direction_ = 0;
+}
+
+void reverse(){
+  /* Faire rouler le robot vers l'arrière à une vitesse désirée */
+  AX_.setMotorPWM(0, -PWM_des_);
+  AX_.setMotorPWM(1, -PWM_des_);
+  Direction_ = -1;
+}
 
 void startPulse(){
   /* Demarrage d'un pulse */
@@ -147,8 +241,8 @@ void sendMsg(){
   doc["time"] = millis();
   doc["potVex"] = analogRead(POTPIN);
   doc["encVex"] = vexEncoder_.getCount();
-  doc["goal"] = pid_.getGoal();
-  doc["measurements"] = PIDmeasurement();
+  doc["goal"] = pid_pos.getGoal();
+  doc["measurements"] = distance();
   doc["voltage"] = AX_.getVoltage();
   doc["current"] = AX_.getCurrent(); 
   doc["pulsePWM"] = pulsePWM_;
@@ -211,19 +305,19 @@ void readMsg(){
   }
 }
 
+void runSequence(){
+/*Exemple de fonction pour faire bouger le robot en avant et en arrière.*/
 
-// Fonctions pour le PID
-double PIDmeasurement(){
-   double distance =2*3.141592*RayonRoue*AX_.readEncoder(1)/64;
-  Serial.println(distance); 
-  return distance;
+  if(RunForward_){
+    forward();
+  }
+
+  if(stop_){
+    forward();
+  }
+  if(RunReverse_){
+    reverse();
+  }
 
 }
-void PIDcommand(double cmd){
 
-  AX_.setMotorPWM(0, cmd);
-  AX_.setMotorPWM(1, cmd);
-}
-void PIDgoalReached(){
-  // To do
-}
