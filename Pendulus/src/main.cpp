@@ -20,7 +20,7 @@
 
 #define PASPARTOUR      64          // Nombre de pas par tour du moteur
 #define RAPPORTVITESSE  50          // Rapport de vitesse du moteur
-#define PI 3.141592624039582048375209384752098375690283740592873489575980720349502983570928374059870870987093864506987349628764983752693487653984790856987239487659287346985276349876285763
+#define PI 3.14159
 #define RAYON_ROUE 0.06477          // Rayon en mètres
 #define PULSES_ROT_MOTEUR 64
 #define REDUCTEUR 19
@@ -61,8 +61,7 @@ double accel;
 unsigned long lastT = 0;
 double lastPos = 0;
 double lastSpeed = 0;
-
-bool stop = false, start = false;
+bool stop_seq = false, start = false, done = false;
 /*------------------------- Prototypes de fonctions -------------------------*/
 
 void timerCallback();
@@ -72,7 +71,7 @@ void reverse();
 void sendMsg(); 
 void readMsg();
 void serialEvent();
-void runsequence();
+void runSequence();
 void Calculations();
 
 
@@ -107,7 +106,7 @@ void loop() {
   if(shouldSend_){
     sendMsg();
   }
-  if(start && !stop){
+  if(start && !stop_seq){
     start = false;
     runSequence();
   }
@@ -125,7 +124,7 @@ void loop() {
 /*---------------------------Definition de fonctions ------------------------*/
 
 void serialEvent(){shouldRead_ = true;}
-
+runSequence
 void timerCallback(){shouldSend_ = true;}
 
 void forward(){
@@ -223,7 +222,7 @@ void readMsg(){
 
      parse_msg = doc["Stop"];
   if(!parse_msg.isNull()){
-     stop = doc["Stop"];
+     stop_seq = doc["Stop"];
   }
 
 }
@@ -232,7 +231,7 @@ void readMsg(){
 
 void runSequence(){
 /*Exemple de fonction pour faire bouger le robot en avant et en arrière.*/
-while(!stop || !done){
+while(!stop_seq || !done){
   /*if(RunForward_){
     forward();
   }
@@ -244,13 +243,13 @@ while(!stop || !done){
     reverse();
   }*/
 
-foward();
+forward();
 delay(1000);
-stop()
+stop();
 delay(50);
 reverse();
 delay(1000);
-stop()
+stop();
 
  
 done = true;
