@@ -21,6 +21,13 @@
 #define PASPARTOUR      64          // Nombre de pas par tour du moteur
 #define RAPPORTVITESSE  50          // Rapport de vitesse du moteur
 //#define PI 3.14159
+#define PinElectro      2           // Pin pour Electroaimant
+#define PinPotentio     7           // Pin pour Potentiomètre
+#define RAYONROUE       0.06477      // rayon des roues
+#define positionCible   1.069         // position d'arrêt
+#define angleCible      0          // position d'arrêt
+#define valeurPot       500          // valeur du potentiometre
+
 #define RAYON_ROUE 0.06477          // Rayon en mètres
 #define PULSES_ROT_MOTEUR 64
 #define REDUCTEUR 19
@@ -31,7 +38,8 @@ ArduinoX AX_;                       // objet arduinoX
 MegaServo servo_;                   // objet servomoteur
 VexQuadEncoder vexEncoder_;         // objet encodeur vex
 IMU9DOF imu_;                       // objet imu
-PID pid_;                           // objet PID
+PID pid_pos;                        // objet PID
+PID pid_angle;                      // objet PID
 
 volatile bool shouldSend_ = false;  // drapeau prêt à envoyer un message
 volatile bool shouldRead_ = false;  // drapeau prêt à lire un message
@@ -55,17 +63,18 @@ float Axyz[3];                      // tableau pour accelerometre
 float Gxyz[3];                      // tableau pour giroscope
 float Mxyz[3];                      // tableau pour magnetometre
 
+double position = 0;
+double speed = 0;
+float previoustime;
+float previousposition;
 /*------------------------- Variables globales -------------------------*/
 double energy;
-double position;
-double speed;
 double accel;
 
 unsigned long lastT = 0;
 double lastPos = 0;
 double lastSpeed = 0;
 volatile bool stop_seq = false, start = false, done = false;
-volatile int ke, Epsilon2;
 /*------------------------- Prototypes de fonctions -------------------------*/
 
 void timerCallback();
@@ -79,6 +88,12 @@ void runSequence();
 void Calculations();
 void startPulse();
 void endPulse();
+
+double distance();
+void PIDcommand(double cmd);
+void PIDgoalReached();
+double angle();
+
 /*---------------------------- fonctions "Main" -----------------------------*/
 
 void setup() {
@@ -94,11 +109,24 @@ void setup() {
   timerSendMsg_.setCallback(timerCallback);
   timerSendMsg_.enable();
   
-  // Initialisation du PID
-  pid_.setGains(0.25,0.1 ,0);
-  // Attache des fonctions de retour
-  pid_.setEpsilon(0.001);
-  pid_.setPeriod(200);
+  // Initialisation du PID de position
+  pid_pos.setGains(0.25,0.1 ,0);
+  pid_pos.setMeasurementFunc(distance);
+  pid_pos.setCommandFunc(PIDcommand);
+  pid_pos.setAtGoalFunc(PIDgoalReached);
+  pid_pos.setEpsilon(0.001);
+  pid_pos.setPeriod(200);
+
+  // Initialisation du PID d'angle
+  pid_angle.setGains(0.25,0.1 ,0);
+  pid_angle.setMeasurementFunc(angle);
+  pid_angle.setCommandFunc(PIDcommand);
+  pid_angle.setAtGoalFunc(PIDgoalReached);
+  pid_angle.setEpsilon(0.001);
+  pid_angle.setPeriod(200);
+   
+  pinMode(MAGPIN, OUTPUT);
+  pinMode(POTPIN, INPUT);
 }
   
 /* Boucle principale (infinie)*/
@@ -132,15 +160,54 @@ void loop() {
   timerPulse_.update();
   
   // mise à jour du PID
-  pid_.run();
+  pid_pos.run();
+  
+
+
+
+
   
 }
 
 /*---------------------------Definition de fonctions ------------------------*/
+// Fonctions pour le PID------------------------------------------------------------------------
+
+double distance()
+{
+  position = AX_.readEncoder(1)*2*PI*RAYONROUE/RAPPORTVITESSE/PASPARTOUR;
+  speed = (position-previousposition)/(millis()-previoustime)*1000;
+  previoustime = millis();
+  previousposition = position;
+  return position;
+}
+
+double angle()
+{
+  return analogRead(POTPIN);
+}
+
+void PIDcommand(double cmd)
+{
+  /*
+  if (cmd > -0.2 && cmd < 0)
+    PWM_des_= -0.2;
+  else if (cmd < 0.2 && cmd > 0)
+    PWM_des_=0.2;
+  else*/
+  pulsePWM_=cmd;
+  AX_.setMotorPWM(0,pulsePWM_);
+}
+
+void PIDgoalReached()
+{
+   // null
+}
+// ---------------------------------------------------------------------------------------------
+
 
 void serialEvent(){shouldRead_ = true;}
-
 void timerCallback(){shouldSend_ = true;}
+
 void startPulse(){
   /* Demarrage d'un pulse */
   timerPulse_.setDelay(pulseTime_);
@@ -187,7 +254,6 @@ void sendMsg(){
   doc["time"] = millis();
   doc["potVex"] = analogRead(POTPIN);
   doc["encVex"] = vexEncoder_.getCount();
-  doc["goal"] = pid_.getGoal();
   doc["voltage"] = AX_.getVoltage();
   doc["current"] = AX_.getCurrent(); 
   doc["PWM_des"] = PWM_des_;
@@ -198,11 +264,19 @@ void sendMsg(){
   doc["gyroX"] = imu_.getGyroX();
   doc["gyroY"] = imu_.getGyroY();
   doc["gyroZ"] = imu_.getGyroZ();
-  doc["isGoal"] = pid_.isAtGoal();
-  doc["actualTime"] = pid_.getActualDt();
+  //doc["actualTime"] = pid_.getActualDt();
   doc["power"] = AX_.getVoltage() * AX_.getCurrent();
   doc["Energy"] = energy;
 
+
+  doc["position"] = position;
+  doc["erreur"] = speed-pid_pos.getGoal();
+  doc["vitesse"] = speed;
+  doc["cible"] = pid_pos.getGoal();
+  doc["cmd"] = pulsePWM_;
+  
+  
+  doc["isGoal"] = pid_pos.isAtGoal();
 
   // Serialisation
   serializeJson(doc, Serial);
@@ -248,11 +322,16 @@ void readMsg(){
 
   parse_msg = doc["setGoal"];
   if(!parse_msg.isNull()){
-    pid_.disable();
-    pid_.setGains(doc["setGoal"][0], doc["setGoal"][1], doc["setGoal"][2]);
-    pid_.setEpsilon(doc["setGoal"][3]);
-    pid_.setGoal(doc["setGoal"][4]);
-    pid_.enable();
+    pid_pos.disable();
+    pid_pos.setGains(doc["setGoal"][0], doc["setGoal"][1], doc["setGoal"][2]);
+    pid_pos.setEpsilon(doc["setGoal"][3]);
+    pid_pos.setGoal(doc["setGoal"][4]);
+    pid_pos.enable();
+    pid_angle.disable();
+    pid_angle.setGains(doc["setGoal"][5], doc["setGoal"][6], doc["setGoal"][7]);
+    pid_angle.setEpsilon(doc["setGoal"][8]);
+    pid_angle.setGoal(doc["setGoal"][9]);
+    pid_angle.enable();
   }
 
    parse_msg = doc["Start"];
