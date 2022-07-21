@@ -18,8 +18,8 @@
 #define MAGPIN          32          // Port numerique pour electroaimant
 #define POTPIN          A5          // Port analogique pour le potentiometre
 
-#define PASPARTOUR      64          // Nombre de pas par tour du moteur
-#define RAPPORTVITESSE  50          // Rapport de vitesse du moteur
+#define PASPARTOUR      64.0         // Nombre de pas par tour du moteur
+#define RAPPORTVITESSE  19.0          // Rapport de vitesse du moteur
 #define PinElectro      2           // Pin pour Electroaimant
 #define PinPotentio     7           // Pin pour Potentiomètre
 #define RayonRoue       0.06477      // rayon des roues
@@ -60,6 +60,11 @@ volatile bool RunReverse_ = false;  // drapeau pret à rouler en arrière
 float Axyz[3];                      // tableau pour accelerometre
 float Gxyz[3];                      // tableau pour giroscope
 float Mxyz[3];                      // tableau pour magnetometre
+
+double position = 0;
+double speed = 0;
+float previoustime;
+float previousposition;
 
 /*------------------------- Prototypes de fonctions -------------------------*/
 
@@ -105,24 +110,21 @@ void setup() {
   timerPulse_.setCallback(endPulse);
 
   // Initialisation du PID de position
-  pid_pos.setGains(0.1,0,0.1);
+  pid_pos.setGains(0.25,0.1 ,0);
   pid_pos.setMeasurementFunc(distance);
   pid_pos.setCommandFunc(PIDcommand);
- // pid_pos.setAtGoalFunc(PIDgoalReached);
-  pid_pos.setEpsilon(0.1);
-  pid_pos.setPeriod(500);
-  pid_pos.setGoal(positionCible);
-  pid_pos.enable();
+  pid_pos.setAtGoalFunc(PIDgoalReached);
+  pid_pos.setEpsilon(0.001);
+  pid_pos.setPeriod(200);
 
   // Initialisation du PID d'angle
-  pid_angle.setGains(913,2713 ,52);
+  pid_angle.setGains(0.25,0.1 ,0);
   pid_angle.setMeasurementFunc(angle);
   pid_angle.setCommandFunc(PIDcommand);
-  //pid_angle.setAtGoalFunc(PIDgoalReached);
+  pid_angle.setAtGoalFunc(PIDgoalReached);
   pid_angle.setEpsilon(0.001);
   pid_angle.setPeriod(200);
-  pid_angle.setGoal(valeurPot);
-  pid_pos.enable();
+
 
 
 }
@@ -175,14 +177,18 @@ digitalWrite(MAGPIN,LOW);
 
 double distance()
 {
-  Serial.println("valeur encodeur = ");
-  Serial.println(2*pi*RayonRoue*AX_.readEncoder(1)/(64*19));
-  return 2*pi*RayonRoue*AX_.readEncoder(1)/64;
+  position = AX_.readEncoder(1)*2*PI*RAYONROUE/RAPPORTVITESSE/PASPARTOUR;
+  if ((millis()-previoustime)>10)
+  {
+    speed = (position-previousposition)/(millis()-previoustime)*1000;
+    previoustime = millis();
+    previousposition = position;
+  }
+  return position;
 }
 
 double angle()
 {
-  Serial.println(analogRead(POTPIN));
   return analogRead(POTPIN);
 }
 
@@ -194,15 +200,13 @@ void PIDcommand(double cmd)
   else if (cmd < -1)
     PWM_des_=-1;
   else*/
-  PWM_des_ = cmd;
-  Serial.println("PWM_des = ");
-  Serial.println(PWM_des_);
-  forward();
+  pulsePWM_=cmd;
+  AX_.setMotorPWM(0,pulsePWM_);
 }
 
 void PIDgoalReached()
 {
-  // To do
+   // null
 }
 // ---------------------------------------------------------------------------------------------
 
@@ -255,8 +259,14 @@ void sendMsg(){
   StaticJsonDocument<500> doc;
   // Elements du message
 
+  doc["position"] = position;
+  doc["erreur"] = speed-pid_pos.getGoal();
+  doc["vitesse"] = speed;
+  doc["cible"] = pid_pos.getGoal();
+  doc["cmd"] = pulsePWM_;
   doc["time"] = millis();
   doc["potVex"] = analogRead(POTPIN);
+  
   doc["encVex"] = vexEncoder_.getCount();
   doc["goal"] = pid_pos.getGoal();
   doc["measurements"] = distance();
@@ -296,7 +306,7 @@ void readMsg(){
     Serial.println(error.c_str());
     return;
   }
-  /*
+  
   // Analyse des éléments du message message
   parse_msg = doc["pulsePWM"];
   if(!parse_msg.isNull()){
@@ -335,6 +345,6 @@ void runSequence(){
   if(RunReverse_){
     reverse();
   }
-*/
+
 }
 
