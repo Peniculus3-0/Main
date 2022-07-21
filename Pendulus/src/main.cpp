@@ -64,7 +64,8 @@ double accel;
 unsigned long lastT = 0;
 double lastPos = 0;
 double lastSpeed = 0;
-bool stop_seq = false, start = false, done = false;
+volatile bool stop_seq = false, start = false, done = false;
+volatile int ke, Epsilon2;
 /*------------------------- Prototypes de fonctions -------------------------*/
 
 void timerCallback();
@@ -83,7 +84,7 @@ void endPulse();
 void setup() {
   Serial.begin(BAUD);               // initialisation de la communication serielle
   AX_.init();                       // initialisation de la carte ArduinoX 
-  imu_.init();                      // initialisation de la centrale inertielle
+  //imu_.init();                      // initialisation de la centrale inertielle
   vexEncoder_.init(2,3);            // initialisation de l'encodeur VEX
   // attache de l'interruption pour encodeur vex
   attachInterrupt(vexEncoder_.getPinInt(), []{vexEncoder_.isr();}, FALLING);
@@ -102,7 +103,7 @@ void setup() {
   
 /* Boucle principale (infinie)*/
 void loop() {
-
+ 
   if(shouldRead_){
     readMsg();
   }
@@ -113,10 +114,18 @@ void loop() {
     startPulse();
   }
   if(start){
+    
+    //runSequence()
+    AX_.buzzerOn();
+    
     //start = false;
-    runSequence();
   }
-
+  if(stop_seq){
+    
+    //runSequence();
+    AX_.buzzerOff();
+    //stop_seq = false;
+  }
 
   // mise a jour des chronometres
   timerSendMsg_.update();
@@ -249,11 +258,13 @@ void readMsg(){
    parse_msg = doc["Start"];
   if(!parse_msg.isNull()){
      start = doc["Start"];
+      stop_seq = false;
   }
 
      parse_msg = doc["Stop"];
   if(!parse_msg.isNull()){
      stop_seq = doc["Stop"];
+     start = false;
   }
 
 }
