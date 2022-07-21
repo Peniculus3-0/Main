@@ -18,8 +18,8 @@
 #define MAGPIN          32          // Port numerique pour electroaimant
 #define POTPIN          A5          // Port analogique pour le potentiometre
 
-#define PASPARTOUR      64          // Nombre de pas par tour du moteur
-#define RAPPORTVITESSE  50          // Rapport de vitesse du moteur
+#define PASPARTOUR      64.0          // Nombre de pas par tour du moteur
+#define RAPPORTVITESSE  19.0          // Rapport de vitesse du moteur
 //#define PI 3.14159
 #define PinElectro      2           // Pin pour Electroaimant
 #define PinPotentio     7           // Pin pour Potentiomètre
@@ -29,9 +29,7 @@
 #define valeurPot       500          // valeur du potentiometre
 
 #define RAYON_ROUE 0.06477          // Rayon en mètres
-#define PULSES_ROT_MOTEUR 64
-#define REDUCTEUR 19
-#define PULSES_PER_ROTATION (PULSES_ROT_MOTEUR*REDUCTEUR)
+
 /*---------------------------- variables globales ---------------------------*/
 
 ArduinoX AX_;                       // objet arduinoX
@@ -85,7 +83,6 @@ void sendMsg();
 void readMsg();
 void serialEvent();
 void runSequence();
-void Calculations();
 void startPulse();
 void endPulse();
 
@@ -160,12 +157,19 @@ void loop() {
   timerPulse_.update();
   
   // mise à jour du PID
-  pid_pos.run();
+  //pid_pos.run();
+  while(start == true){
+    pulsePWM_ = 1;
+    AX_.setMotorPWM(0,pulsePWM_);
+    while (position <= 0.5*pid_pos.getGoal()) {
+      distance();
+      sendMsg();
+      readMsg();
+    }
+    pid_pos.run();
+  }
+
   
-
-
-
-
   
 }
 
@@ -188,12 +192,6 @@ double angle()
 
 void PIDcommand(double cmd)
 {
-  /*
-  if (cmd > -0.2 && cmd < 0)
-    PWM_des_= -0.2;
-  else if (cmd < 0.2 && cmd > 0)
-    PWM_des_=0.2;
-  else*/
   pulsePWM_=cmd;
   AX_.setMotorPWM(0,pulsePWM_);
 }
@@ -250,7 +248,6 @@ void sendMsg(){
   /* Envoit du message Json sur le port seriel */
   StaticJsonDocument<500> doc;
   // Elements du message
-  Calculations();
   doc["time"] = millis();
   doc["potVex"] = analogRead(POTPIN);
   doc["encVex"] = vexEncoder_.getCount();
@@ -258,12 +255,14 @@ void sendMsg(){
   doc["current"] = AX_.getCurrent(); 
   doc["PWM_des"] = PWM_des_;
   doc["Etat_robot"] = Direction_;
+  /*
   doc["accelX"] = imu_.getAccelX();
   doc["accelY"] = imu_.getAccelY();
   doc["accelZ"] = imu_.getAccelZ();
   doc["gyroX"] = imu_.getGyroX();
   doc["gyroY"] = imu_.getGyroY();
   doc["gyroZ"] = imu_.getGyroZ();
+  */
   //doc["actualTime"] = pid_.getActualDt();
   doc["power"] = AX_.getVoltage() * AX_.getCurrent();
   doc["Energy"] = energy;
@@ -353,35 +352,5 @@ void readMsg(){
 void runSequence(){
 /*Exemple de fonction pour faire bouger le robot en avant et en arrière.*/
 
-  /*if(RunForward_){
-    forward();
-  }
-
-  if(stop_){
-    stop();
-  }
-  if(RunReverse_){
-    reverse();
-  }
-*/
-forward();
-delay(1000);
-stop();
-delay(50);
-reverse();
-delay(1000);
-stop();
 }
 
-void Calculations(){
-  double time = millis() - lastT;
-  double power = AX_.getVoltage() * AX_.getCurrent();
-  energy += power*time;
-  position = AX_.readEncoder(1)*2*PI*RAYON_ROUE/PULSES_PER_ROTATION;
-  speed = (position-lastPos)/time;
-  accel = (speed-lastSpeed)/time;
-  
-  lastPos = position; 
-  lastSpeed = speed;
-  lastT = millis();
-}
