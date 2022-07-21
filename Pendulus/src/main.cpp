@@ -9,6 +9,7 @@
 #include <ArduinoJson.h> // librairie de syntaxe JSON
 #include <SPI.h> // librairie Communication SPI
 #include <LibS3GRO.h>
+#include <math.h>
 
 /*------------------------------ Constantes ---------------------------------*/
 
@@ -26,7 +27,6 @@
 #define positionCible   1.069         // position d'arrêt
 #define angleCible      0          // position d'arrêt
 #define valeurPot       500          // valeur du potentiometre
-#define pi              3.141592653589798462643383279502
 
 
 /*---------------------------- variables globales ---------------------------*/
@@ -153,7 +153,8 @@ void loop() {
 }
 
 while (distance() != 0.7*positionCible) {
-  pid_pos.run();
+  PWM_DES_ = 1;
+  forward();
 }
 
 while()
@@ -192,10 +193,10 @@ double angle()
 void PIDcommand(double cmd)
 {
   /*
-  if (cmd > 1)
-    PWM_des_=1;
-  else if (cmd < -1)
-    PWM_des_=-1;
+  if (cmd > -0.2 && cmd < 0)
+    PWM_des_= -0.2;
+  else if (cmd < 0.2 && cmd > 0)
+    PWM_des_=0.2;
   else*/
   pulsePWM_=cmd;
   AX_.setMotorPWM(0,pulsePWM_);
@@ -326,6 +327,11 @@ void readMsg(){
     pid_pos.setEpsilon(doc["setGoal"][3]);
     pid_pos.setGoal(doc["setGoal"][4]);
     pid_pos.enable();
+    pid_angle.disable();
+    pid_angle.setGains(doc["setGoal"][5], doc["setGoal"][6], doc["setGoal"][7]);
+    pid_angle.setEpsilon(doc["setGoal"][8]);
+    pid_angle.setGoal(doc["setGoal"][9]);
+    pid_angle.enable();
   }
 }
 
