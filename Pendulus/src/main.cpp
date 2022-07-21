@@ -22,7 +22,7 @@
 #define RAPPORTVITESSE  19.0          // Rapport de vitesse du moteur
 #define PinElectro      2           // Pin pour Electroaimant
 #define PinPotentio     7           // Pin pour Potentiomètre
-#define RayonRoue       0.06477      // rayon des roues
+#define RAYONROUE       0.06477      // rayon des roues
 #define positionCible   1.069         // position d'arrêt
 #define angleCible      0          // position d'arrêt
 #define valeurPot       500          // valeur du potentiometre
