@@ -178,12 +178,9 @@ digitalWrite(MAGPIN,LOW);
 double distance()
 {
   position = AX_.readEncoder(1)*2*PI*RAYONROUE/RAPPORTVITESSE/PASPARTOUR;
-  if ((millis()-previoustime)>10)
-  {
-    speed = (position-previousposition)/(millis()-previoustime)*1000;
-    previoustime = millis();
-    previousposition = position;
-  }
+  speed = (position-previousposition)/(millis()-previoustime)*1000;
+  previoustime = millis();
+  previousposition = position;
   return position;
 }
 
@@ -266,7 +263,8 @@ void sendMsg(){
   doc["cmd"] = pulsePWM_;
   doc["time"] = millis();
   doc["potVex"] = analogRead(POTPIN);
-  
+  doc["isGoal"] = pid_pos.isAtGoal();
+  /*
   doc["encVex"] = vexEncoder_.getCount();
   doc["goal"] = pid_pos.getGoal();
   doc["measurements"] = distance();
@@ -281,9 +279,8 @@ void sendMsg(){
   doc["gyroX"] = imu_.getGyroX();
   doc["gyroY"] = imu_.getGyroY();
   doc["gyroZ"] = imu_.getGyroZ();
-  doc["isGoal"] = pid_pos.isAtGoal();
   doc["actualTime"] = pid_pos.getActualDt();
-
+*/
   // Serialisation
   serializeJson(doc, Serial);
   // Envoit
